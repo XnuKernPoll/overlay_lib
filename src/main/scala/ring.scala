@@ -1,16 +1,25 @@
-package overlay_lib 
+package topologies 
+
 import com.twitter.io.{Buf}
 import com.google.common.hash._ 
-
-
-
+import scodec._, codecs.{list => ListCodec, utf8, bytes} 
 /** Node for use in dhts **/
+import bits.ByteVector
 case class Node(key: String, hash: Array[Byte])
+
 
 object Node {
 
+  type Bin = (String, ByteVector)
 
-  def hashLong(bytes: Array[Byte] ): Long =  HashCode.fromBytes(bytes).asLong() 
+
+  object Bin {
+    def extract(node: Node) = (node.key, ByteVector( node.hash ) )
+    def toNode(b: Bin) = Node(b._1, b._2.bits.toByteArray) 
+  }
+
+
+  def hashLong(bytes: Array[Byte] ): Long =  HashCode.fromBytes(bytes).asLong()
 
   def lcompare(l: Node, r: Node): Boolean = {
     val (lv, rv): (Long, Long) = (hashLong(l.hash), hashLong(r.hash)  )
@@ -23,6 +32,9 @@ object Node {
   }
  
 
+  def binCodec: Codec[Bin] = (utf8 :: bytes(20) ).as[Bin]
+  def codec: Codec[Node] = binCodec.xmap[Node](b => Bin.toNode(b), n => Bin.extract(n)  )
+  def listCodec: Codec[List[Node]] = ListCodec(codec)
 
 }
 
@@ -42,6 +54,11 @@ case class Neighborhood(my_node: Node, neighbors: List[Node]) {
   }
 
 
+}
+
+
+object Neighborhood {
+  def codec: Codec[Neighborhood] = (Node.codec :: Node.listCodec ).as[Neighborhood]
 }
 
 /** Basic Chord Implementation */
