@@ -1,14 +1,16 @@
 package topologies 
-
 import com.twitter.io.{Buf}
 import com.google.common.hash._ 
-import scodec._, codecs.{list => ListCodec, utf8, bytes} 
+import scodec._, codecs.{list => ListCodec, utf8, bytes}, scodec.bits.ByteVector
+
+
 /** Node for use in dhts **/
-import bits.ByteVector
 case class Node(key: String, hash: Array[Byte])
 
 
 object Node {
+
+
 
   type Bin = (String, ByteVector)
 

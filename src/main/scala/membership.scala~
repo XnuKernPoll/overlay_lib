@@ -1,0 +1,30 @@
+package topologies.membership
+import com.twitter.finagle.mux._
+import topologies._ _
+import com.twitter.util._, com.twitter.finagle.{Service, Path}
+
+import topologies._ 
+
+sealed trait OP
+case object JOIN extends OP
+case object LEAVE extends OP  
+case object LIST extends OP
+
+object OP {
+
+  def asINT(op: OP) = op match {
+    case JOIN => 0; case LEAVE => 1; case LIST => 2 
+  }
+
+
+  def fromINT = op match {
+    case 0 => JOIN 
+  }
+
+}
+
+
+
+class Server(seed: Neighborhood)  {
+  var neighbors = seed
+}
