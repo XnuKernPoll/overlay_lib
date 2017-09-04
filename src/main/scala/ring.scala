@@ -1,8 +1,10 @@
-package chord
-
+package overlay_lib 
 import com.twitter.io.{Buf}
 import com.google.common.hash._ 
 
+
+
+/** Node for use in dhts **/
 case class Node(key: String, hash: Array[Byte])
 
 object Node {
@@ -24,7 +26,7 @@ object Node {
 
 }
 
- 
+/** the state needed for p2p routing */
 case class Neighborhood(my_node: Node, neighbors: List[Node]) {
 
   def update(n: Node) = {
@@ -42,7 +44,7 @@ case class Neighborhood(my_node: Node, neighbors: List[Node]) {
 
 }
 
-
+/** Basic Chord Implementation */
 object Chord {
 
   import Node.hashLong
@@ -88,7 +90,9 @@ object Chord {
 }
 
 
-
+/**
+  A module to create replica sets, and use consistent hashing to pick the appropriate partitiion 
+*/
 object PreferenceList {
 
   type Shards[T] = List[List[T]]
@@ -98,14 +102,14 @@ object PreferenceList {
     shards(b) 
   }
 
-  def inSets(shards: Shards[T], item: T) = shards.filter(shard => shard.contains(item) )
+  def inSets[T](shards: Shards[T], item: T) = shards.filter(shard => shard.contains(item) )
 
   type SF[T] = (T, T) => Boolean
 
 
-  def partition[T](l: List[T], sorting: SF,  shardSize: Int): Shards  = {
+  def partition[T](l: List[T], sorting: SF[T],  shardSize: Int): Shards[T]  = {
     val remainder = l.size ^ shardSize
-    val peers = peers.sortWith( sorting(_, _) ) 
+    val peers = l.sortWith( sorting(_, _) ) 
     val partitions = peers.grouped(shardSize).toList
     val t = if (remainder > 0) ( partitions.last.toSet ++ l.take(remainder).toSet  ).toList else  { partitions.last }
     ( partitions.dropRight(1) :+ t ).toList
@@ -113,3 +117,5 @@ object PreferenceList {
 
 
 }
+
+
