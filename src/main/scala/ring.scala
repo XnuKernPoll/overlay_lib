@@ -41,13 +41,13 @@ object Node {
 /** the state needed for p2p routing */
 case class Neighborhood(my_node: Node, neighbors: List[Node]) {
 
-  def update(n: Node) = {
+  def join(n: Node) = {
     val nptbl = ( neighbors.toSet + n).toList
     val updated = this.copy(neighbors = Chord.sortPeers( nptbl )  )
     updated
   }
 
-  def delete(n: Node) = {
+  def leave(n: Node) = {
     val nptbl = (neighbors.toSet - n).toList
     val updated = this.copy(neighbors = Chord.sortPeers( nptbl )  )
     updated 
@@ -66,7 +66,7 @@ object Chord {
 
   import Node.hashLong
   type nodeID = Array[Byte]
-
+ 
 
   def sortPeers(peers: List[Node] ) = peers.sortWith( Node.rcompare(_, _) )
   type node_sort = (Node, Node) => Boolean
