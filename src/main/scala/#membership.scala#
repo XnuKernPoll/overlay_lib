@@ -1,17 +1,5 @@
 package topologies.membership
 
-import com.twitter.finagle.mux._
-import topologies._
-import com.twitter.util._, com.twitter.finagle.{Service, Path}
-
-
-import com.twitter.io.Buf 
-import topologies._ 
-import scodec._, codecs.{uint8}, scodec.bits.BitVector
-
-import Buf.ByteArray.Shared
-
-
 class PeerState(seed: Neighborhood, version: PNCounter = PNCounter.zero)  {
   var peers = seed
   var clock = version

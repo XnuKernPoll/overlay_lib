@@ -63,6 +63,23 @@ object Neighborhood {
   def codec: Codec[Neighborhood] = (Node.codec :: Node.listCodec ).as[Neighborhood]
 }
 
+class PeerState(seed: Neighborhood, version: PNCounter = PNCounter.zero)  {
+  var peers = seed
+  var clock = version
+
+  def join(n: Node) = {
+    synchronized { peers = peers.join(n) }
+    synchronized { clock = clock.incr } 
+  }
+
+  def leave(n: Node) = {
+    synchronized { peers = peers.leave(n) }
+    synchronized { clock = clock.decr} 
+  }
+
+}
+
+
 /** Basic Chord Implementation */
 object Chord {
 
