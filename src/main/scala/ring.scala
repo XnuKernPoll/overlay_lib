@@ -91,30 +91,47 @@ object Chord {
 
     def getBucket(peers: List[Node], keyHash: nodeID): Int = {
       val hc = HashCode.fromBytes(keyHash)
-      Hashing.consistentHash(HashCode.fromBytes( keyHash) , peers.size) 
+      Hashing.consistentHash(HashCode.fromBytes(keyHash) , peers.size) - 1
     }
 
-    def predecessor(peers: List[Node], keyHash: nodeID): Node = {
-      val i = getBucket(peers, keyHash) - 1
-      val pl = sortPeers(peers) 
-      pl(i)
+    def getNode(peers: List[Node], hash: nodeID) = peers( getBucket(peers, hash) ) 
+
+    def successorList(peers: List[Node], keyHash: nodeID) = {
+      val n = getNode(peers, keyHash)
+      peers.filter( x => hashLong(x.hash) >= hashLong(n.hash) )
     }
 
-    def successor(peers: List[Node], keyHash: nodeID): Node = {
-      val i = getBucket(peers, keyHash) + 1
-      val pl = sortPeers(peers) 
-      pl(i)
+    def successors(peers: List[Node], keyHash: nodeID, f: Int): List[Node] = {
+      val succs = sortPeers( successorList(peers, keyHash) )
+
+      if ( succs.size >= f) succs.take(f) else {
+        val rem = f - succs.size
+        val pl = sortPeers { predecessorList(peers, keyHash) }.take(rem)
+        succs ++ pl 
+      }
+
     }
 
-    def successors(peers: List[Node], keyHash: nodeID): List[Node] = {
-      val successors = peers.filter( x => hashLong(x.hash) >= hashLong( successor(peers, keyHash).hash )  ) 
-      sortPeers(successors)
+
+    def predecessors(peers: List[Node], hash: nodeID, f: Int) = {
+      val preds = predecessorList(peers, hash).sortWith(Node.rcompare)
+      if (preds.size >= f) preds.take(f) else {
+        val rem = f - preds.size
+        val pl = sortPeers { successorList(peers, hash) }.take(rem)
+        preds ++ pl 
+      }
     }
 
-    def predecessors(peers: List[Node], keyHash: nodeID): List[Node] = {
-      val predecessors = peers.filter( x => hashLong(x.hash) <= hashLong( predecessor(peers, keyHash).hash )   )
-      predecessors.sortWith( Node.rcompare(_, _) )
+
+    def predecessorList(peers: List[Node], keyHash: nodeID): List[Node] = {
+      val n = getNode(peers, keyHash)
+
+      peers.filter { x =>
+        hashLong(x.hash) <= hashLong(n.hash)
+      }
+
     }
+    
 
   }
 
