@@ -1,25 +1,30 @@
 package topologies 
 import com.twitter.io.{Buf}
-import com.google.common.hash._ 
-import scodec._, codecs.{list => ListCodec, utf8, bytes}, scodec.bits.ByteVector
-
-
+import com.google.common.hash._
+import java.nio.charset.StandardCharsets
+import io.circe._, io.circe.generic.semiauto._
 /** Node for use in dhts **/
-case class Node(key: String, hash: Array[Byte])
+case class Node(host: String, port: Int, hash: Array[Byte]) {
+  def toHostPort = HostPort(host, port)
+}
+
+
+
+case class HostPort(address: String, port: Int) {
+  def asString = s"${this.address}:${this.port}"
+
+  def toNode: Node = {
+    val hash = Hashing.sha1().hashString( this.asString, StandardCharsets.UTF_8 ).asBytes() 
+    Node(this.address, this.port, hash) 
+  }
+
+}
 
 
 object Node {
 
-
-
-  type Bin = (String, ByteVector)
-
-
-  object Bin {
-    def extract(node: Node) = (node.key, ByteVector( node.hash ) )
-    def toNode(b: Bin) = Node(b._1, b._2.bits.toByteArray) 
-  }
-
+  implicit val nodeEncoder = deriveEncoder[Node]
+  implicit val nodeDecoder = deriveDecoder[Node]
 
   def hashLong(bytes: Array[Byte] ): Long =  HashCode.fromBytes(bytes).asLong()
 
@@ -33,11 +38,6 @@ object Node {
     rn > ln
   }
  
-
-  def binCodec: Codec[Bin] = (utf8 :: bytes(20) ).as[Bin]
-  def codec: Codec[Node] = binCodec.xmap[Node](b => Bin.toNode(b), n => Bin.extract(n)  )
-  def listCodec: Codec[List[Node]] = ListCodec(codec)
-
 }
 
 /** the state needed for p2p routing */
@@ -55,13 +55,9 @@ case class Neighborhood(my_node: Node, neighbors: List[Node]) {
     updated 
   }
 
-
 }
 
 
-object Neighborhood {
-  def codec: Codec[Neighborhood] = (Node.codec :: Node.listCodec ).as[Neighborhood]
-}
 
 class PeerState(seed: Neighborhood, version: PNCounter = PNCounter.zero)  {
   var peers = seed

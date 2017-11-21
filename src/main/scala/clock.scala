@@ -1,7 +1,7 @@
 package topologies
-/**  counters are logical clocks for causal ordering of events */
-import scodec._, codecs.{utf8, int64L}
+import io.circe._, io.circe.generic.semiauto._
 
+/**  counters are logical clocks for causal ordering of events */
 
 sealed trait Counter {
   def incr: Counter
@@ -31,13 +31,15 @@ case class PNCounter(key: String, add: Long, delete: Long ) extends Counter {
 
 
 object PNCounter {
-  def zero: PNCounter = PNCounter("", 0L, 0L )
-  def codec = (utf8 :: int64L :: int64L).as[PNCounter]
+  implicit val PNEncoder = deriveEncoder[PNCounter]
+  implicit val PNDecoder = deriveDecoder[PNCounter]
+  def zero = PNCounter("", 0L, 0L)
 }
 
 
 object VectorClock {
-  def codec = (utf8 :: int64L).as[VectorClock]
+  implicit val VCEncoder = deriveDecoder[VectorClock]
+  implicit val VCDecoder = deriveDecoder[VectorClock]
   def zero: VectorClock = VectorClock("", 0L)
 }
 
