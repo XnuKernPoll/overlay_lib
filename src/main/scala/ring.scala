@@ -148,7 +148,7 @@ object PreferenceList {
 
   def route[T](shards: Shards[T], keyHash: Array[Byte]) = {
     val b = Hashing.consistentHash(HashCode.fromBytes( keyHash), shards.size )
-    shards(b) 
+    shards(b - 1) 
   }
 
   def inSets[T](shards: Shards[T], item: T) = shards.filter(shard => shard.contains(item) )
